@@ -4,7 +4,7 @@
 # reads .editorconfig, whose values the chosen file overrides, .prettierignore
 # and .gitignore.
 { root, chosen }:
-{ lib, ... }:
+{ lib, self, ... }:
 let
   config' = chosen {
     tool = "prettier";
@@ -33,7 +33,47 @@ let
       "prettier.config.ts"
       "prettier.config.cts"
       "prettier.config.mts"
-    ];
+      # package.json is JSON without comments, which Nix reads. package.yaml
+      # is YAML, which Nix does not read, so its key prettier is not
+      # detected.
+      {
+        name = "package.json";
+        label = "the key prettier of package.json";
+        when = path: builtins.fromJSON (builtins.readFile path) ? prettier;
+      }
+    ]
+    # prettier resolves the patterns of overrides[].files and excludeFiles
+    # against the directory of the file of --config, a store path, so a
+    # pattern with a directory matches no file of the project, without a
+    # message; a pattern without one matches file names anywhere. The atom
+    # reads the forms that Nix parses: .prettierrc.json, which prettier reads
+    # as JSON without comments, and .prettierrc.toml. .prettierrc, JSON5 and
+    # YAML are not read.
+    ++
+      lib.mapAttrsToList
+        (
+          name: parse:
+          let
+            directories =
+              path:
+              lib.filter (lib.hasInfix "/") (
+                lib.concatMap (
+                  override: lib.toList (override.files or [ ]) ++ lib.toList (override.excludeFiles or [ ])
+                ) ((parse (builtins.readFile path)).overrides or [ ])
+              );
+          in
+          {
+            inherit name;
+            label = "${name} (overrides with a directory: ${
+              lib.concatStringsSep ", " (directories (self.outPath + "/${name}"))
+            })";
+            when = path: directories path != [ ];
+          }
+        )
+        {
+          ".prettierrc.json" = builtins.fromJSON;
+          ".prettierrc.toml" = builtins.fromTOML;
+        };
   };
 in
 {

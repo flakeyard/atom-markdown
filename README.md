@@ -72,12 +72,14 @@ From the project's source, which for a git flake holds only tracked files:
 - the Markdown files, `*.md`, for all three tools;
 - the files and directories that links in Markdown lead to, for lychee;
 - the configuration files at the standard paths of the table below;
+- `package.json` at the root, for its key `prettier`;
 - `.editorconfig`, which prettier reads: its `max_line_length`, `indent_style`,
   `indent_size` or `tab_width` and `end_of_line` apply where the chosen
   configuration of prettier sets no `printWidth`, `useTabs`, `tabWidth` or
   `endOfLine`. The default sets all four, so `.editorconfig` applies only with a
   project's file that leaves them out;
-- `.prettierignore` and `.gitignore` at the root, whose files prettier skips;
+- `.prettierignore` and `.gitignore` at the root, whose files prettier skips,
+  also a tracked file that `.gitignore` lists;
 - `.markdownlintignore` at the root, whose files markdownlint skips;
 - `.lycheeignore` at the root, whose patterns exclude links from lychee.
 
@@ -108,17 +110,29 @@ one ([FY-0037][fy-0037]).
 
 - prettier also takes `.prettierrc.json`, `.prettierrc.json5`,
   `.prettierrc.yaml`, `.prettierrc.yml` and `.prettierrc.toml`, and gets the
-  chosen file with `--config`. The key `prettier` of `package.json` or
-  `package.yaml` is not read. A JavaScript or TypeScript configuration,
+  chosen file with `--config`. A JavaScript or TypeScript configuration,
   `.prettierrc` or `prettier.config` with the extension `js`, `cjs`, `mjs`,
-  `ts`, `cts` or `mts`, fails evaluation with a message that names it, since
-  prettier would ignore it.
+  `ts`, `cts` or `mts`, and the key `prettier` of `package.json` fail evaluation
+  with a message that names them, since prettier would ignore them. The key
+  `prettier` of `package.yaml` is ignored too, but not detected, since Nix does
+  not read YAML.
+- prettier resolves the patterns of `overrides[].files` and `excludeFiles`
+  against the directory of the file of `--config`, a store path, so a pattern
+  with a directory, such as `docs/**/*.md`, matches no file of the project. Such
+  patterns are not supported: in `.prettierrc.json` and `.prettierrc.toml` they
+  fail evaluation with a message that names them; in the other forms, which Nix
+  does not read, they apply to no file. A pattern without a directory, such as
+  `CHANGELOG.md`, matches the file name anywhere.
 - markdownlint also takes `.markdownlint.jsonc`, `.markdownlint.yaml`,
   `.markdownlint.yml` and `.markdownlintrc`, in JSON or YAML, and gets the
-  chosen file with `-c`.
+  chosen file with `-c`. `extends` is not supported: markdownlint-cli resolves
+  it against the directory of the chosen file, a store path, and fails. The atom
+  fails evaluation with a message that names the file when a line sets `extends`
+  to a value other than `null`, at its start or after `{` or a comma; a value on
+  a later line is not detected.
 - lychee gets the chosen file with `--config`; the hook adds `--offline`,
-  `--include-fragments` and `--root-dir .`, the app `--include-fragments` and
-  `--root-dir .`.
+  `--include-fragments` and `--root-dir .`, and the app runs the hook's entry
+  and arguments without `--offline`.
 - More than one file at the standard paths of one tool fails evaluation with a
   message that names them. The messages are those of lib-atom
   ([FY-0040][fy-0040]):
@@ -192,10 +206,12 @@ Supported systems are `x86_64-linux` and `aarch64-linux`.
 ## App
 
 `nix run .#markdown-links` checks every link of the project's tracked Markdown
-files, also those on the network, with lychee and the chosen configuration. It
-runs from the root of the git checkout, from any directory in it, and skips the
-files of the project's global excludes and of the hook's `excludes`. It takes no
-arguments and reads these environment variables:
+files, also those on the network, with the entry and the arguments of the hook
+`lychee` without `--offline`, so the chosen configuration and the project's
+flags of the hook apply to it too. It runs from the root of the git checkout,
+from any directory in it, and skips the files of the project's global excludes
+and of the hook's `excludes`. It takes no arguments and reads these environment
+variables:
 
 - `GITHUB_TOKEN`, or `GH_TOKEN` when `GITHUB_TOKEN` is not set: a token for
   links to github.com. Without one, the app runs with the lower rate limit of
@@ -259,14 +275,17 @@ and holds the tests:
   markdownlint, a missing file, a missing anchor, a missing file from the root
   and a file prettier would change;
 - `test-configs` and `test-configs-*`: the defaults, every standard path of
-  every tool, more than one file and a JavaScript configuration;
-- `test-ignores`, `test-ignores-format`: `.prettierignore`, `.gitignore`,
-  `.markdownlintignore` and `.lycheeignore`;
+  every tool, and the configurations that fail evaluation: more than one file, a
+  JavaScript configuration, the key `prettier` of `package.json`, overrides of
+  prettier with a directory, and `extends` of markdownlint;
+- `test-ignores`, `test-ignores-format`: `.prettierignore`, `.gitignore` for a
+  file named on the command line, `.markdownlintignore` and `.lycheeignore`;
 - `test-editorconfig`, `test-editorconfig-default`: `.editorconfig` with a
   project's configuration of prettier and with the default;
 - `test-excluded`, `test-not-excluded`: the project's global excludes skip the
   failing files in the check, and other excludes do not;
-- `test-app`: the app in a git checkout, without network access;
+- `test-app`: the app in a git checkout, without network access, also with the
+  project's flags of the hook `lychee`;
 - `test-markdownlint-rules`, `test-prettier-options`: the defaults list every
   rule, parameter and option of the installed tools;
 - `test-markdownlint-merge`: a discovered `.markdownlint.yaml`, a

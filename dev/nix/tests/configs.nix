@@ -49,8 +49,8 @@
         markdownlintrc = ".markdownlintrc";
       };
       # The message that the atom's own module makes for the files of
-      # prettier in a fixture in dev/fixtures/errors: the atom gets a
-      # lib-atom whose config gives the errors as the file, since
+      # prettier or markdownlint in a fixture in dev/fixtures/errors: the
+      # atom gets a lib-atom whose config gives the errors as the file, since
       # builtins.tryEval loses the text of a throw.
       spied.lib = lib-atom // {
         config =
@@ -60,13 +60,16 @@
           in
           chosen // { file = lib.concatStringsSep "\n" chosen.errors; };
       };
-      message =
+      spiedProject =
         name:
-        lib.last
-          (fixture {
-            name = "errors/${name}";
-            atomInputs.lib-atom = spied;
-          }).allSystems.${system}.treefmt.settings.formatter.prettier.options;
+        (fixture {
+          name = "errors/${name}";
+          atomInputs.lib-atom = spied;
+        }).allSystems.${system};
+      message = name: lib.last (spiedProject name).treefmt.settings.formatter.prettier.options;
+      markdownlintMessage =
+        name:
+        lib.last (lib.splitString " -c " (spiedProject name).pre-commit.settings.hooks.markdownlint.entry);
       evaluates = name: output: (builtins.tryEval (check "errors/${name}" output).drvPath).success;
     in
     {
@@ -98,6 +101,31 @@
             "the error names the JavaScript files" =
               message "js-config"
               == "atom-markdown: the atom cannot pass these configurations of prettier to it: .prettierrc.cjs, prettier.config.ts; write the configuration in one of .prettierrc, .prettierrc.json, .prettierrc.json5, .prettierrc.yaml, .prettierrc.yml, .prettierrc.toml instead.";
+            # prettier resolves the patterns of overrides against the
+            # directory of the file of --config.
+            "overrides with a directory fail" = !evaluates "prettier-directories" "treefmt";
+            "the error names the patterns with a directory" =
+              message "prettier-directories"
+              == "atom-markdown: the atom cannot pass these configurations of prettier to it: .prettierrc.json (overrides with a directory: docs/**/*.md, notes/*.md); write the configuration in one of .prettierrc, .prettierrc.json, .prettierrc.json5, .prettierrc.yaml, .prettierrc.yml, .prettierrc.toml instead.";
+            "overrides with a directory in TOML fail" = !evaluates "prettier-directories-toml" "treefmt";
+            "the error names the patterns of TOML" =
+              message "prettier-directories-toml"
+              == "atom-markdown: the atom cannot pass these configurations of prettier to it: .prettierrc.toml (overrides with a directory: docs/*.md); write the configuration in one of .prettierrc, .prettierrc.json, .prettierrc.json5, .prettierrc.yaml, .prettierrc.yml, .prettierrc.toml instead.";
+            "overrides by file names evaluate" = evaluates "prettier-names" "treefmt";
+            # prettier ignores the key prettier of package.json with --config.
+            "the key prettier of package.json fails" = !evaluates "package-json" "treefmt";
+            "the error names the key prettier of package.json" =
+              message "package-json"
+              == "atom-markdown: the atom cannot pass these configurations of prettier to it: the key prettier of package.json; write the configuration in one of .prettierrc, .prettierrc.json, .prettierrc.json5, .prettierrc.yaml, .prettierrc.yml, .prettierrc.toml instead.";
+            "package.json without the key prettier evaluates" = evaluates "package-json-other" "treefmt";
+            # markdownlint-cli resolves extends against the directory of the
+            # file of -c.
+            "extends fails" = !evaluates "markdownlint-extends" "markdown";
+            "the error names the file that extends" =
+              markdownlintMessage "markdownlint-extends"
+              == "atom-markdown: the atom cannot pass these configurations of markdownlint to it: .markdownlint.json (extends); write the configuration in one of .markdownlint.json, .markdownlint.jsonc, .markdownlint.yaml, .markdownlint.yml, .markdownlintrc instead.";
+            "extends in YAML fails" = !evaluates "markdownlint-extends-yaml" "markdown";
+            "extends null evaluates" = evaluates "markdownlint-extends-null" "markdown";
           }
           // lib.mapAttrs' (
             name: file:

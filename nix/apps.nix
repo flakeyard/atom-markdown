@@ -1,9 +1,9 @@
 # apps.markdown-links: lychee with network access over the tracked Markdown
 # files of the project, for the links that the check cannot reach
-# (FY-0017). It runs the package and the configuration of the hook lychee,
-# without --offline, from the root of the git checkout, and selects the
-# files by the hook's `files`, its `excludes` and the project's global
-# excludes.
+# (FY-0017). It runs the entry and the arguments of the hook lychee without
+# the word --offline, so the configuration and the flags of the hook apply to
+# both, from the root of the git checkout, and selects the files by the
+# hook's `files`, its `excludes` and the project's global excludes.
 {
   _file = ./apps.nix;
 
@@ -17,6 +17,9 @@
       # pre-commit joins them.
       excludes = settings.excludes ++ lychee.excludes;
       exclude = lib.concatMapStringsSep "|" (pattern: "(?:${pattern})") excludes;
+      # The entry without the word --offline; the shell splits it into
+      # arguments as pre-commit does.
+      online = lib.concatStringsSep " " (lib.remove "--offline" (lib.splitString " " lychee.entry));
       links = pkgs.writeShellApplication {
         name = "markdown-links";
         runtimeInputs = [
@@ -48,8 +51,7 @@
             echo "markdown-links: no Markdown files to check."
             exit 0
           fi
-          ${lib.getExe lychee.package} --config ${lib.escapeShellArg lychee.settings.configPath} \
-            --include-fragments --root-dir . --no-progress -- "''${files[@]}"
+          ${online} ${lib.escapeShellArgs lychee.args} --no-progress -- "''${files[@]}"
         '';
       };
     in
