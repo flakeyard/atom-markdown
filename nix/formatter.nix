@@ -3,12 +3,12 @@
 # the configuration that the project chose by --config (FY-0037) and still
 # reads .editorconfig, whose values the chosen file overrides, .prettierignore
 # and .gitignore.
-{ root }:
-{ lib, self, ... }:
+{ root, chosen }:
+{ lib, ... }:
 let
-  config' = import ./config.nix { inherit lib root self; } {
+  config' = chosen {
     tool = "prettier";
-    default = "prettier.json";
+    default = root + "/config/prettier.json";
     # The files that prettier finds by name, other than package.json and
     # package.yaml, whose key prettier the atom does not read.
     names = [
