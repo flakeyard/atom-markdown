@@ -271,9 +271,7 @@
   "MD043": {
     "enabled": true,
     "severity": "error",
-    "headings": [
-      "*"
-    ],
+    "headings": ["*"],
     "match_case": false
   },
   "MD044": {
@@ -320,17 +318,13 @@
   "MD052": {
     "enabled": true,
     "severity": "error",
-    "ignored_labels": [
-      "x"
-    ],
+    "ignored_labels": ["x"],
     "shortcut_syntax": false
   },
   "MD053": {
     "enabled": true,
     "severity": "error",
-    "ignored_definitions": [
-      "//"
-    ]
+    "ignored_definitions": ["//"]
   },
   "MD054": {
     "enabled": true,
@@ -358,12 +352,7 @@
   "MD059": {
     "enabled": true,
     "severity": "error",
-    "prohibited_texts": [
-      "click here",
-      "here",
-      "link",
-      "more"
-    ]
+    "prohibited_texts": ["click here", "here", "link", "more"]
   },
   "MD060": {
     "enabled": true,

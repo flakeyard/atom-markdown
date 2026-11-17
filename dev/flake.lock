@@ -1,5 +1,32 @@
 {
   "nodes": {
+    "atom-data-formats": {
+      "inputs": {
+        "git-hooks": [
+          "git-hooks"
+        ],
+        "lib-atom": "lib-atom",
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794918276,
+        "narHash": "sha256-9wwWFgc39kE2ijQCYYzpB1VKTxYINF2rOGKINQAHNTM=",
+        "ref": "v0",
+        "rev": "0c643933ae631061f9fb6f1f26cf556db689f011",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-data-formats"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "0c643933ae631061f9fb6f1f26cf556db689f011",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-data-formats"
+      }
+    },
     "atom-nix": {
       "inputs": {
         "git-hooks": [
@@ -50,6 +77,30 @@
         "shallow": true,
         "type": "git",
         "url": "https://github.com/flakeyard/atom-shell"
+      }
+    },
+    "atom-text": {
+      "inputs": {
+        "git-hooks": [
+          "git-hooks"
+        ],
+        "lib-atom": "lib-atom_2"
+      },
+      "locked": {
+        "lastModified": 1794908283,
+        "narHash": "sha256-MD0DmITR6I9jRaRQmlpFNcCGwG68WF1r2i3jbWTjyYk=",
+        "ref": "v0",
+        "rev": "5d3eff102fc73979c01625325f07c13d2ea1a6c6",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-text"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "5d3eff102fc73979c01625325f07c13d2ea1a6c6",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-text"
       }
     },
     "atom-workflows": {
@@ -174,6 +225,42 @@
         "url": "https://github.com/vic/import-tree"
       }
     },
+    "lib-atom": {
+      "locked": {
+        "lastModified": 1794916860,
+        "narHash": "sha256-dU0TiUNrWwRK8GiQEyfIGEyrAAOdircz6OS9O6fgzZ0=",
+        "ref": "v0",
+        "rev": "6a962bfb805ce814cba756a7943f6f2d2cd1f67e",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/lib-atom"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "6a962bfb805ce814cba756a7943f6f2d2cd1f67e",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/lib-atom"
+      }
+    },
+    "lib-atom_2": {
+      "locked": {
+        "lastModified": 1794902163,
+        "narHash": "sha256-cD6ZkxNK0x+wGVL9OZPU+QohKfaBPvTr9AZnWUS8spQ=",
+        "ref": "v0",
+        "rev": "f2c83b7399315afb477abba1e112bca107f0b345",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/lib-atom"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "f2c83b7399315afb477abba1e112bca107f0b345",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/lib-atom"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1794165970,
@@ -194,8 +281,10 @@
     },
     "root": {
       "inputs": {
+        "atom-data-formats": "atom-data-formats",
         "atom-nix": "atom-nix",
         "atom-shell": "atom-shell",
+        "atom-text": "atom-text",
         "atom-workflows": "atom-workflows",
         "atom-workspace": "atom-workspace",
         "flake-parts": "flake-parts",

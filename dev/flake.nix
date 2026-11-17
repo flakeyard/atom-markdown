@@ -15,6 +15,11 @@
       url = "git+https://github.com/cachix/git-hooks.nix?ref=master&rev=204b6977e00caac19e2313015a598543ca7be150&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    atom-data-formats = {
+      url = "git+https://github.com/flakeyard/atom-data-formats?ref=v0&rev=0c643933ae631061f9fb6f1f26cf556db689f011&shallow=1";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+      inputs.git-hooks.follows = "git-hooks";
+    };
     atom-nix = {
       url = "git+https://github.com/flakeyard/atom-nix?ref=v0&rev=d8e5b1d8f367d27181fbf6e2616c9e6c5ecbbafa&shallow=1";
       inputs.treefmt-nix.follows = "treefmt-nix";
@@ -23,6 +28,10 @@
     atom-shell = {
       url = "git+https://github.com/flakeyard/atom-shell?ref=v0&rev=566536a1e4bc2d1bad24688f9828d5ae7d9ec3a9&shallow=1";
       inputs.treefmt-nix.follows = "treefmt-nix";
+      inputs.git-hooks.follows = "git-hooks";
+    };
+    atom-text = {
+      url = "git+https://github.com/flakeyard/atom-text?ref=v0&rev=5d3eff102fc73979c01625325f07c13d2ea1a6c6&shallow=1";
       inputs.git-hooks.follows = "git-hooks";
     };
     atom-workflows = {
@@ -84,8 +93,10 @@
         inherit systems;
         imports = [
           (atomFor { }).flakeModules.default
+          inputs.atom-data-formats.flakeModules.default
           inputs.atom-nix.flakeModules.default
           inputs.atom-shell.flakeModules.default
+          inputs.atom-text.flakeModules.default
           inputs.atom-workflows.flakeModules.default
           inputs.atom-workspace.flakeModules.default
           # Every file under nix/ is a flake-parts module.
