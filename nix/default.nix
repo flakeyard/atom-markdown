@@ -40,7 +40,7 @@ in
   imports = [
     (upstream "treefmt-nix" atomInputs.treefmt-nix.flakeModule)
     (upstream "git-hooks" atomInputs.git-hooks.flakeModule)
-    (import ./formatter.nix { inherit root chosen; })
+    (import ./formatter.nix { inherit root chosen shared; })
     (import ./hooks.nix { inherit root chosen; })
     (import ./checks.nix {
       inherit (atomInputs) git-hooks;
