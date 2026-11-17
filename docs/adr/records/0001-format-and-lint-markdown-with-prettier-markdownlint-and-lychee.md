@@ -42,6 +42,10 @@ links ([FY-0017][fy-0017]). Decisions of flakeyard require of it:
   moving tag `v0`, a stricter default ships first as an opt-in under
   `config/next/`, and the warning of the next major version lives in
   `nix/next-major.nix`.
+- [FY-0040][fy-0040]: the check of `follows`, the warning of the next major
+  version and the choice of configuration files are functions of lib-atom, which
+  the atom declares as an input and pins in its own `flake.lock`, and the
+  helpers of the tests come from its `internal/testing`.
 
 Reading treefmt-nix at `0d6d739a`, git-hooks.nix at `204b6977` and the tools of
 `nixos-26.05` at `ac588ef1` (prettier 3.8.3, markdownlint-cli 0.48.0 with
@@ -109,20 +113,28 @@ markdownlint 0.40.0, lychee 0.24.1), and running them, showed:
 
 ### Inputs
 
-The public flake has two inputs, `treefmt-nix` (numtide/treefmt-nix) and
-`git-hooks` (cachix/git-hooks.nix). Before importing the module of either, the
-atom fails evaluation with the line `inputs.<name>.follows = "<name>";` when the
-consumer's input of that name has another store path.
+The public flake has two upstream inputs, `treefmt-nix` (numtide/treefmt-nix)
+and `git-hooks` (cachix/git-hooks.nix). Before importing the module of either,
+the atom fails evaluation with the line `inputs.<name>.follows = "<name>";` when
+the consumer's input of that name has another store path, through the function
+`upstream` of lib-atom.
+
+The public flake also declares `lib-atom`, which the atom pins in its own
+`flake.lock` and consumers neither declare nor follow ([FY-0040][fy-0040]). In
+that lock, `git-hooks` follows the nixpkgs of `treefmt-nix`, so that the lock
+holds one nixpkgs; consumers replace both inputs with `follows`, so this does
+not reach them.
 
 ### Configuration files
 
-One function, `nix/config.nix`, chooses the file of each tool: the project's
+The function `config` of lib-atom chooses the file of each tool: the project's
 file at one of the tool's standard paths at the root, detected with
 `builtins.pathExists` on the project's source, else the default in `config/`.
 The chosen file becomes a store path of its own with `builtins.path`, named
 without a leading dot so that prettier reads its extension. More than one file
-at the standard paths of a tool fails evaluation with a message that names them,
-as does a file in a form the atom cannot pass.
+at the standard paths of a tool fails evaluation with lib-atom's message that
+names them, as does a file in a form the atom cannot pass, which the atom lists
+as `unsupported`.
 
 - prettier: `.prettierrc`, `.prettierrc.json`, `.prettierrc.json5`,
   `.prettierrc.yaml`, `.prettierrc.yml` or `.prettierrc.toml`, else
@@ -196,36 +208,41 @@ lychee's own.
 ### Next major version
 
 While `nix/next-major.nix` exists, `checks.markdown` and
-`devShells.flakeyard-markdown` warn with `lib.warn` of the consumer's nixpkgs:
-the version, the end of support 6 months after it, and the link to the migration
-guide the file names ([FY-0016][fy-0016], [FY-0038][fy-0038]).
+`devShells.flakeyard-markdown` warn with `lib.warn` of the consumer's nixpkgs,
+through the function `warning` of lib-atom: the version, the end of support 6
+months after it, and the link to the migration guide the file names
+([FY-0016][fy-0016], [FY-0038][fy-0038]).
 
 ### Tests
 
 `dev/flake.nix` imports the atom from the flake's own outputs called with the
 dev flake's `treefmt-nix` and `git-hooks`, which is what `follows` gives a
 consumer, together with atom-nix, atom-shell, atom-workflows and atom-workspace,
-and checks this repository with them. Fixture projects import the atom and
-atom-workspace the same way. Its checks evaluate on x86*64-linux and
-aarch64-linux: a project that passes both checks, whose YAML and JSON prettier
-would change; a project with a finding of markdownlint, a missing file, a
-missing anchor and a missing file from the root, and a file prettier would
-change; a project for every standard path of every tool whose files pass only
-with that file; more than one file and a JavaScript configuration; the ignore
-files of the three tools and `.gitignore`; `.editorconfig` with a project's file
-and with the default; the global excludes; the app in a git checkout; the glue
-of atom-workspace; the follows error of both inputs; the next-major warning;
-that `config/markdownlint.json` lists every rule, alias, tag and parameter of
-the installed markdownlint at its default, and `config/prettier.json` every
-option of the installed prettier; and that a discovered file, a
-`~/.markdownlintrc` and `markdownlint*\*` variables do not change the findings
-of the default.
+and checks this repository with them. The dev flake has no input for lib-atom:
+it fetches the revision that the root `flake.lock` pins, gives it to the atom
+and takes the fixture projects and the tests of `follows`, the warning and the
+glue of atom-workspace from its `internal/testing`, with the messages restated
+in the tests. Fixture projects import the atom and atom-workspace the same way.
+Its checks evaluate on `x86_64-linux` and `aarch64-linux`: a project that passes
+both checks, whose YAML and JSON prettier would change; a project with a finding
+of markdownlint, a missing file, a missing anchor and a missing file from the
+root, and a file prettier would change; a project for every standard path of
+every tool whose files pass only with that file; more than one file and a
+JavaScript configuration; the ignore files of the three tools and `.gitignore`;
+`.editorconfig` with a project's file and with the default; the global excludes;
+the app in a git checkout; the glue of atom-workspace; the follows error of both
+inputs; the next-major warning; that `config/markdownlint.json` lists every
+rule, alias, tag and parameter of the installed markdownlint at its default, and
+`config/prettier.json` every option of the installed prettier; and that a
+discovered file, a `~/.markdownlintrc` and `markdownlint_*` variables do not
+change the findings of the default.
 
 ## Constraints
 
-- The public flake MUST declare only the inputs `treefmt-nix` and `git-hooks`,
-  and MUST fail evaluation with the exact follows line when the consumer's input
-  of either name has another store path.
+- The public flake MUST declare only the inputs `treefmt-nix`, `git-hooks` and
+  `lib-atom` ([FY-0040][fy-0040]), and MUST fail evaluation with the exact
+  follows line when the consumer's input of `treefmt-nix` or `git-hooks` has
+  another store path.
 - prettier MUST format only `*.md` and MUST get exactly one `--config`, with the
   chosen file.
 - markdownlint MUST get the chosen file by `-c`, and lychee by `--config`; the
@@ -299,3 +316,5 @@ of the default.
   https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0037-atoms-ship-default-configs-that-projects-replace.md
 [fy-0038]:
   https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0038-roll-out-the-atoms.md
+[fy-0040]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0040-share-code-through-lib-repositories.md

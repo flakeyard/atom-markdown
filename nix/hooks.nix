@@ -1,13 +1,12 @@
 # The hooks markdownlint and lychee of git-hooks.nix, with the configuration
 # that the project chose (FY-0037). Their package, entry and arguments are the
 # single definition that the check and the app also run.
-{ root }:
-{ lib, self, ... }:
+{ root, chosen }:
+{ lib, ... }:
 let
-  chosen = import ./config.nix { inherit lib root self; };
   markdownlint = chosen {
     tool = "markdownlint";
-    default = "markdownlint.json";
+    default = root + "/config/markdownlint.json";
     # The files that markdownlint-cli finds in the working directory.
     names = [
       ".markdownlint.json"
@@ -19,7 +18,7 @@ let
   };
   lychee = chosen {
     tool = "lychee";
-    default = "lychee.toml";
+    default = root + "/config/lychee.toml";
     names = [ "lychee.toml" ];
   };
 in

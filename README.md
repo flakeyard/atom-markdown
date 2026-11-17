@@ -9,7 +9,9 @@ links with lychee in the app `markdown-links` ([FY-0017][fy-0017],
 ## Inputs
 
 The atom has two inputs, `treefmt-nix` and `git-hooks`, which the project makes
-it share with `follows` ([FY-0017][fy-0017]). While the atom is `0.y.z`, only
+it share with `follows` ([FY-0017][fy-0017]). It also pins [lib-atom][lib-atom],
+the functions that atoms share, in its own `flake.lock`; the project neither
+declares nor follows it ([FY-0040][fy-0040]). While the atom is `0.y.z`, only
 flakeyard's own repositories use it, in the form of [FY-0016][fy-0016]:
 
 ```nix
@@ -118,7 +120,19 @@ one ([FY-0037][fy-0037]).
   `--include-fragments` and `--root-dir .`, the app `--include-fragments` and
   `--root-dir .`.
 - More than one file at the standard paths of one tool fails evaluation with a
-  message that names them.
+  message that names them. The messages are those of lib-atom
+  ([FY-0040][fy-0040]):
+
+  ```text
+  atom-markdown: the atom cannot pass these configurations of prettier to it:
+  .prettierrc.cjs; write the configuration in one of .prettierrc,
+  .prettierrc.json, .prettierrc.json5, .prettierrc.yaml, .prettierrc.yml,
+  .prettierrc.toml instead.
+  atom-markdown: the project has more than one configuration of markdownlint:
+  .markdownlint.json, .markdownlintrc; keep one.
+  ```
+
+  (one line each, wrapped here).
 
 The defaults:
 
@@ -263,6 +277,11 @@ and holds the tests:
 - `test-follows`: the error for a missing `follows` of either input;
 - `test-next-major`: the warning of the next major version.
 
+The dev flake has no input for lib-atom: it fetches the revision that the root
+[`flake.lock`](flake.lock) pins, gives it to the atom and takes the fixture
+projects and the tests `test-follows`, `test-next-major` and `test-workspace`
+from `internal/testing` of that revision ([FY-0040][fy-0040]).
+
 Run the same commands as CI:
 
 ```sh
@@ -311,6 +330,9 @@ provide them in this repository are not released yet ([FY-0038][fy-0038]).
   https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0037-atoms-ship-default-configs-that-projects-replace.md
 [fy-0038]:
   https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0038-roll-out-the-atoms.md
+[fy-0040]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0040-share-code-through-lib-repositories.md
+[lib-atom]: https://github.com/flakeyard/lib-atom
 [ly]: config/lychee.toml
 [ml]: config/markdownlint.json
 [pr]: config/prettier.json

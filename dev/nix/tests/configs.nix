@@ -6,6 +6,7 @@
 {
   facts,
   fixture,
+  lib-atom,
   root,
   ...
 }:
@@ -47,13 +48,25 @@
         markdownlint-yml = ".markdownlint.yml";
         markdownlintrc = ".markdownlintrc";
       };
-      # The message of the files of a fixture in dev/fixtures/errors.
+      # The message that the atom's own module makes for the files of
+      # prettier in a fixture in dev/fixtures/errors: the atom gets a
+      # lib-atom whose config gives the errors as the file, since
+      # builtins.tryEval loses the text of a throw.
+      spied.lib = lib-atom // {
+        config =
+          arguments: tool:
+          let
+            chosen = lib-atom.config arguments tool;
+          in
+          chosen // { file = lib.concatStringsSep "\n" chosen.errors; };
+      };
       message =
-        name: arguments:
-        (import (root + "/nix/config.nix") {
-          inherit lib root;
-          self.outPath = root + "/dev/fixtures/errors/${name}";
-        } arguments).message;
+        name:
+        lib.last
+          (fixture {
+            name = "errors/${name}";
+            atomInputs.lib-atom = spied;
+          }).allSystems.${system}.treefmt.settings.formatter.prettier.options;
       evaluates = name: output: (builtins.tryEval (check "errors/${name}" output).drvPath).success;
     in
     {
@@ -79,27 +92,12 @@
             "two files of prettier fail" = !evaluates "two-configs" "treefmt";
             "two files of markdownlint fail" = !evaluates "two-configs" "markdown";
             "the error names the files of prettier" =
-              message "two-configs" {
-                tool = "prettier";
-                default = "prettier.json";
-                names = [
-                  ".prettierrc.json"
-                  ".prettierrc.yaml"
-                ];
-              }
-              == "atom-markdown: the project has more than one configuration of prettier at its root: .prettierrc.json, .prettierrc.yaml; keep one.";
+              message "two-configs"
+              == "atom-markdown: the project has more than one configuration of prettier: .prettierrc.json, .prettierrc.yaml; keep one.";
             "a JavaScript configuration fails" = !evaluates "js-config" "treefmt";
             "the error names the JavaScript files" =
-              message "js-config" {
-                tool = "prettier";
-                default = "prettier.json";
-                names = [ ".prettierrc.json" ];
-                unsupported = [
-                  ".prettierrc.cjs"
-                  "prettier.config.ts"
-                ];
-              }
-              == "atom-markdown: the atom cannot pass these configurations of prettier at the root of the project to it: .prettierrc.cjs, prettier.config.ts; write the configuration in one of .prettierrc.json instead.";
+              message "js-config"
+              == "atom-markdown: the atom cannot pass these configurations of prettier to it: .prettierrc.cjs, prettier.config.ts; write the configuration in one of .prettierrc, .prettierrc.json, .prettierrc.json5, .prettierrc.yaml, .prettierrc.yml, .prettierrc.toml instead.";
           }
           // lib.mapAttrs' (
             name: file:
