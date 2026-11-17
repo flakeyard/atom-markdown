@@ -4,18 +4,39 @@
 { root, chosen }:
 { lib, ... }:
 let
+  markdownlints = [
+    ".markdownlint.json"
+    ".markdownlint.jsonc"
+    ".markdownlint.yaml"
+    ".markdownlint.yml"
+    ".markdownlintrc"
+  ];
   markdownlint = chosen {
     tool = "markdownlint";
     default = root + "/config/markdownlint.json";
     # The files that markdownlint-cli finds in the working directory.
-    names = [
-      ".markdownlint.json"
-      ".markdownlint.jsonc"
-      ".markdownlint.yaml"
-      ".markdownlint.yml"
-      ".markdownlintrc"
-    ];
+    names = markdownlints;
+    # markdownlint-cli resolves extends of the file of -c against its
+    # directory, a store path without the file it names, and fails with
+    # ENOENT. Every form may hold comments, JSONC or YAML, which Nix does
+    # not parse, so the atom looks for the key extends with a value other
+    # than null on one line, at its start or after { or a comma; a value on
+    # a later line is not detected.
+    unsupported = map (name: {
+      inherit name;
+      label = "${name} (extends)";
+      when = path: lib.any extends (lib.splitString "\n" (builtins.readFile path));
+    }) markdownlints;
   };
+  # A line that sets extends.
+  extends =
+    line:
+    let
+      found = builtins.match "(.*[{,])?[[:space:]]*[\"']?extends[\"']?[[:space:]]*:[[:space:]]*(.*)" line;
+      # Nothing, a comment, or null or ~ before anything but a name.
+      unset = text: builtins.match "[[:space:]]*|(#|//).*|(null|~)([^[:alnum:]_].*)?" text != null;
+    in
+    found != null && !unset (lib.last found);
   lychee = chosen {
     tool = "lychee";
     default = root + "/config/lychee.toml";
