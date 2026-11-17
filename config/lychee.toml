@@ -1,0 +1,21 @@
+# flakeyard's configuration of lychee (FY-0037), for the offline check of
+# links inside the repository and for the app markdown-links that checks all
+# links. The check adds --offline, --include-fragments and --root-dir, the app
+# --include-fragments and --root-dir, as flags.
+
+# Links in code blocks and inline code are examples, not links to check.
+include_verbatim = false
+# Mail addresses cannot be checked without sending mail.
+include_mail = false
+# Loopback, private and link-local addresses, such as http://localhost:8080
+# in an example, are not reachable from CI.
+exclude_all_private = true
+
+# The responses that count as working links.
+accept = ["100..=103", "200..=299"]
+max_redirects = 10
+# Seconds to wait for a response, and retries of a failed request with the
+# seconds between them.
+timeout = 20
+max_retries = 3
+retry_wait_time = 1
