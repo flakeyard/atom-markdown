@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/flakeyard/atom-markdown/compare/v0.1.1...v0.1.2) (2026-11-19)
+
+
+### Bug Fixes
+
+* **deps:** update flake input lib-atom to 99d4af0 ([#29](https://github.com/flakeyard/atom-markdown/issues/29)) ([a6b41ff](https://github.com/flakeyard/atom-markdown/commit/a6b41ffc8c2b1e657702156f4abe72413335a12e))
+
 ## [0.1.1](https://github.com/flakeyard/atom-markdown/compare/v0.1.0...v0.1.1) (2026-11-17)
 
 
